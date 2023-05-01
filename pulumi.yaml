@@ -1,0 +1,80 @@
+package:
+  name: pulumi
+  version: 3.65.1
+  epoch: 0
+  description: Infrastructure as Code in any programming language
+  copyright:
+    - license: Apache-2.0
+
+environment:
+  contents:
+    packages:
+      - ca-certificates-bundle
+      - go
+      - busybox
+      - build-base
+      - yarn
+      - nodejs
+      - python3
+      - python3-dev
+
+pipeline:
+  - uses: git-checkout
+    with:
+      repository: https://github.com/pulumi/pulumi.git
+      tag: v${{package.version}}
+      destination: ${{package.name}}
+      expected-commit: f4044dc955009a7da3d58f845ec29a9a7f80ec49
+
+  - working-directory: ${{package.name}}
+    pipeline:
+      - runs: |
+          set -x
+          export CGO_ENABLED=0 GO111MODULE=on
+          export PULUMI_VERSION="v${{package.version}}"
+          export PULUMI_ROOT="$(mktemp -d)"
+          export GOBIN="${PULUMI_ROOT}/bin"
+
+          # Build the CLI itself
+          make install
+
+          # Build the Pulumi Language SDKs (Go, Node.js, Python)
+          for lang in go nodejs python; do
+            (cd sdk/${lang} && make build)
+          done
+
+          # Install all binaries into destdir
+          mkdir -p "${{targets.destdir}}/usr/bin"
+          for f in $(ls "${GOBIN}"); do
+            mv -v "${PULUMI_ROOT}/bin/${f}" "${{targets.destdir}}/usr/bin/${f}"
+          done
+
+      - uses: strip
+
+subpackages:
+  - name: "pulumi-language-go"
+    description: "Pulumi Language SDK for Go"
+    pipeline:
+      - runs: |
+          mkdir -p "${{targets.subpkgdir}}/usr/bin"
+          mv "${{targets.destdir}}/usr/bin/pulumi-language-go" "${{targets.subpkgdir}}/usr/bin/pulumi-language-go"
+
+  - name: "pulumi-language-nodejs"
+    description: "Pulumi Language SDK for Node.js"
+    pipeline:
+      - runs: |
+          mkdir -p "${{targets.subpkgdir}}/usr/bin"
+          mv "${{targets.destdir}}/usr/bin/pulumi-language-nodejs" "${{targets.subpkgdir}}/usr/bin/pulumi-language-nodejs"
+
+  - name: "pulumi-language-python"
+    description: "Pulumi Language SDK for Python"
+    pipeline:
+      - runs: |
+          mkdir -p "${{targets.subpkgdir}}/usr/bin"
+          mv "${{targets.destdir}}/usr/bin/pulumi-language-python" "${{targets.subpkgdir}}/usr/bin/pulumi-language-python"
+
+update:
+  enabled: true
+  github:
+    identifier: pulumi/pulumi
+    strip-prefix: v
