@@ -612,3 +612,4 @@ aws-efs-csi-driver
 prometheus-bind-exporter
 pulumi
 pulumi-kubernetes-operator
+pulumi-language-dotnet
