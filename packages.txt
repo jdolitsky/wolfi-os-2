@@ -615,3 +615,4 @@ pulumi-kubernetes-operator
 pulumi-language-dotnet
 pulumi-language-java
 pulumi-language-yaml
+pulumi-watch

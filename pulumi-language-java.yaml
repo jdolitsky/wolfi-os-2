@@ -32,10 +32,6 @@ pipeline:
             -o "${{targets.destdir}}/usr/bin/pulumi-language-java" \
             -ldflags="-X github.com/pulumi/pulumi-java/pkg/version.Version=v${{package.version}}" \
             ./cmd/pulumi-language-java
-          go build \
-            -o "${{targets.destdir}}/usr/bin/pulumi-java-gen" \
-            -ldflags="-X github.com/pulumi/pulumi-java/pkg/version.Version=v${{package.version}}" \
-            ./cmd/pulumi-java-gen
       - uses: strip
 
 update:
